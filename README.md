@@ -24,17 +24,15 @@ $message->setIsPromotional(true); //whether or not your message is promotopnal (
 // (time-to-live, how long we try to send message via this channel before considering it expired)
 $pushMessage = new Hyber\Message\Push('Text for push', static::TTL_PUSH);
 //each channel also can have some specific parameters
-$pushMessage->setImage($imageUrl);
-$pushMessage->setCaption($textForPushButton);
-$pushMessage->setAction($linkForPushButton);
+$pushMessage->addImage($imageUrl);
+$pushMessage->addButton($buttonCaption, $buttonLink);
 $message->addPush($pushMessage);
 
 // Channels will be used in same order you added them
 // It is recommended to add channels in same order as in this example - this is a cheapest option
 $viberMessage = new Hyber\Message\Viber('Text for Viber', static::TTL_VIBER);
-$viberMessage->setImage($imageUrl);
-$viberMessage->setCaption($textForViberButton);
-$viberMessage->setAction($linkForViberButton);
+$viberMessage->addImage($imageUrl);
+$viberMessage->addButton($buttonCaption, $buttonLink);
 $message->addViber($viberMessage);
 
 $smsMessage = new Hyber\Message\Viber('Text for SMS', static::TTL_SMS);
@@ -49,8 +47,9 @@ if ($response instanceof Hyber\Response\SuccessResponse) {
     echo $response->getMessageId();
 // ... or ErrorResponse
 } elseif ($response instanceof Hyber\Response\ErrorResponse) {
-    echo $response->getErrorCode();
-    echo $response->getErrorText();
+    echo $response->getHttpCode(); // HTTP code is always present
+    echo $response->getErrorCode(); // error code may be null in some cases
+    echo $response->getErrorText(); // error text may be null in some cases
 }
 
 // However, if the message was not sent at all -
