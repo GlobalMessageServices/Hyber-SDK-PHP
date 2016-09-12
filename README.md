@@ -1,6 +1,8 @@
 # Hyber-SDK-PHP
 Easy way to integrate PHP-powered system with Hyber platform
 
+[![Build Status](https://travis-ci.org/Incuube/Hyber-SDK-PHP.svg)](https://travis-ci.org/Incuube/Hyber-SDK-PHP)
+
 ## Usage example
 ```PHP
 // First, you need to create service that will send your messages.
