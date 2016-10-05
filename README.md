@@ -3,22 +3,57 @@ Easy way to integrate PHP-powered system with Hyber platform
 
 [![Build Status](https://travis-ci.org/Incuube/Hyber-SDK-PHP.svg)](https://travis-ci.org/Incuube/Hyber-SDK-PHP)
 
+## Installaton
+
+#### Recommended: composer
+ 
+      composer require incuube/sdk-hyber
+
+#### Not recommended: download sources
+
+      wget https://github.com/Incuube/Hyber-SDK-PHP/archive/master.zip
+      
+Include autoload SDK:
+
+      include_once "sdk-hyber/Hyber/bootstrap.php";
+      
 ## Usage example
 ```PHP
-// First, you need to create service that will send your messages.
+// First, you need choose Http Client
+// We recommend, but you can choose which one you like best
+
+    composer require guzzlehttp/guzzle
+    composer require php-http/guzzle6-adapter
+
+$config = [
+    'headers' => [
+        'Content-Type' => 'application/json',
+        'Accept' => 'application/json',
+    ],
+    'auth' => [
+        $login,
+        $password,
+    ],
+];
+
+$guzzle = new GuzzleHttp\Client($config);
+$adapter = new Http\Adapter\Guzzle6\Client($guzzle);
+$apiClient = new \Hyber\ApiClient($adapter, new \Http\Message\MessageFactory\GuzzleMessageFactory());
+
+// Second, you need to create service that will send your messages.
 // All this parameters are mandatory. They are provided for each Hyber customer and rarely change  
-$sender = new Hyber\MessageSender($login, $password, $identifier, $alphaName);
+$sender = new Hyber\MessageSender($apiClient, $identifier, $alphaName);
 // You may specify some additional sender parameters, however they are not mandatory
 $sender->setCallbackUrl($config->getDRReceiverUrl());
 
-// Second, you need to create and configure message instance
+// Third, you need to create and configure message instance
 // Parameters in constructor are mandatory, parameters in setters are not
 $message = new Hyber\Message($phoneNumber);
 $message->setExtraId($mySystem->getMessageId()); //some identifier from external system
 $message->setTag('campaign'); //on Hyber portal you can filter statistics by tag
 $message->setIsPromotional(true); //whether or not your message is promotopnal (advertising)
 
-// Third, you need to configure channels with which your message will be sent
+// Fourth, you need to configure channels with which your message will be sent
 // You may add whatever available channels you want, however if specific channel is not enabled for you,
 // there will be no delivery via this channel
  
@@ -35,9 +70,10 @@ $message->addPush($pushMessage);
 $viberMessage = new Hyber\Message\Viber('Text for Viber', static::TTL_VIBER);
 $viberMessage->addImage($imageUrl);
 $viberMessage->addButton($buttonCaption, $buttonLink);
+$viberMessage->addIosExpirityText('Ios Expirity Text');
 $message->addViber($viberMessage);
 
-$smsMessage = new Hyber\Message\Viber('Text for SMS', static::TTL_SMS);
+$smsMessage = new Hyber\Message\Sms('Text for SMS', static::TTL_SMS);
 $message->addSms($smsMessage);
 
 // Now you can send your message. Second parameter is optional,
