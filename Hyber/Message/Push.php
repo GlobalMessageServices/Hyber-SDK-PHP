@@ -11,6 +11,9 @@ class Push
     private $ttl;
 
     /** @var string */
+    private $title;
+
+    /** @var string */
     private $image;
 
     /** @var array */
@@ -45,6 +48,14 @@ class Push
     /**
      * @return string
      */
+    public function getTitle()
+    {
+        return $this->title;
+    }
+
+    /**
+     * @return string
+     */
     public function getImage()
     {
         return $this->image;
@@ -64,6 +75,14 @@ class Push
     public function addImage($image)
     {
         $this->image = $image;
+    }
+
+    /**
+     * @param string $title
+     */
+    public function addTitle($title)
+    {
+        $this->title = $title;
     }
 
     /**

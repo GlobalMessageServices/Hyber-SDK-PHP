@@ -164,40 +164,66 @@ class Message
     {
         $data = [
             'channels' => [],
-            'texts' => [],
+            'channel_options' => [],
         ];
 
         /** @var Push $push */
-        $push = $this->getPush();
-        if ($push) {
-            $data['channels'][] = [
-                'channel' => 'push',
+        if ($push = $this->getPush()) {
+            $data['channels'][] = 'push';
+            $options = [
+                'text' => $push->getText(),
                 'ttl' => $push->getTtl(),
             ];
 
-            $data['texts'][] = $push->getText();
+            if ($title = $push->getTitle()) {
+                $options['title'] = $title;
+            }
+
+            if ($img = $push->getImage()) {
+                $options['img'] = $img;
+            }
+
+            if ($button = $push->getButton()) {
+                $options['caption'] = $button['caption'];
+                $options['action'] = $button['link'];
+            }
+
+            $data['channel_options']['push'] = $options;
         }
 
         /** @var Viber $viber */
-        $viber = $this->getViber();
-        if ($viber) {
-            $data['channels'][] = [
-                'channel' => 'viber',
+        if ($viber = $this->getViber()) {
+            $data['channels'][] = 'viber';
+            $options = [
+                'text' => $viber->getText(),
                 'ttl' => $viber->getTtl(),
             ];
 
-            $data['texts'][] = $viber->getText();
+            if ($img = $viber->getImage()) {
+                $options['img'] = $img;
+            }
+
+            if ($button = $viber->getButton()) {
+                $options['caption'] = $button['caption'];
+                $options['action'] = $button['link'];
+            }
+
+            if ($iosExpirityText = $viber->getIosExpirityText()) {
+                $options['ios_expirity_text'] = $iosExpirityText;
+            }
+
+            $data['channel_options']['viber'] = $options;
         }
 
         /** @var Sms $sms */
         $sms = $this->getSms();
         if ($sms) {
-            $data['channels'][] = [
-                'channel' => 'sms',
+            $data['channels'][] = 'sms';
+            $data['channel_options']['sms'] = [
+                'text' => $sms->getText(),
+                'alpha_name' => $sms->getAlphaName(),
                 'ttl' => $sms->getTtl(),
             ];
-
-            $data['texts'][] = $sms->getText();
         }
 
         return $data;
@@ -215,50 +241,5 @@ class Message
         } else {
             return $dateTime;
         }
-    }
-
-    /**
-     * @return array
-     */
-    public function buildChannelOptions()
-    {
-        $channelOptions = [];
-
-        /** @var Push $push */
-        $push = $this->getPush();
-        if ($push) {
-            $img = $push->getImage();
-            if ($img) {
-                $channelOptions['push']['img'] = $img;
-            }
-
-            $button = $push->getButton();
-            if ($button) {
-                $channelOptions['push']['caption'] = $button['caption'];
-                $channelOptions['push']['action'] = $button['link'];
-            }
-        }
-
-        /** @var Viber $viber */
-        $viber = $this->getViber();
-        if ($viber) {
-            $img = $viber->getImage();
-            if ($img) {
-                $channelOptions['viber']['img'] = $img;
-            }
-
-            $button = $viber->getButton();
-            if ($button) {
-                $channelOptions['viber']['caption'] = $button['caption'];
-                $channelOptions['viber']['action'] = $button['link'];
-            }
-
-            $iosExpirityText = $viber->getIosExpirityText();
-            if ($iosExpirityText) {
-                $channelOptions['viber']['ios_expirity_text'] = $iosExpirityText;
-            }
-        }
-
-        return $channelOptions;
     }
 }

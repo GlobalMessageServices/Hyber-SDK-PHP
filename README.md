@@ -42,7 +42,7 @@ $apiClient = new \Hyber\ApiClient($adapter, new \Http\Message\MessageFactory\Guz
 
 // Second, you need to create service that will send your messages.
 // All this parameters are mandatory. They are provided for each Hyber customer and rarely change  
-$sender = new Hyber\MessageSender($apiClient, $identifier, $alphaName);
+$sender = new Hyber\MessageSender($apiClient, $identifier);
 // You may specify some additional sender parameters, however they are not mandatory
 $sender->setCallbackUrl($config->getDRReceiverUrl());
 
@@ -61,6 +61,7 @@ $message->setIsPromotional(true); //whether or not your message is promotopnal (
 // (time-to-live, how long we try to send message via this channel before considering it expired)
 $pushMessage = new Hyber\Message\Push('Text for push', static::TTL_PUSH);
 //each channel also can have some specific parameters
+$pushMessage->addTitle('Title for Push');
 $pushMessage->addImage($imageUrl);
 $pushMessage->addButton($buttonCaption, $buttonLink);
 $message->addPush($pushMessage);
@@ -73,7 +74,7 @@ $viberMessage->addButton($buttonCaption, $buttonLink);
 $viberMessage->addIosExpirityText('Ios Expirity Text');
 $message->addViber($viberMessage);
 
-$smsMessage = new Hyber\Message\Sms('Text for SMS', static::TTL_SMS);
+$smsMessage = new Hyber\Message\Sms('Text for SMS', static::TTL_SMS, $alphaName);
 $message->addSms($smsMessage);
 
 // Now you can send your message. Second parameter is optional,

@@ -10,14 +10,19 @@ class Sms
     /** @var integer */
     private $ttl;
 
+    /** @var string */
+    private $alphaName;
+
     /**
      * @param string  $text
      * @param integer $ttl
+     * @param string  $alphaName
      */
-    public function __construct($text, $ttl)
+    public function __construct($text, $ttl, $alphaName)
     {
         $this->text = $text;
         $this->ttl = $ttl;
+        $this->alphaName = $alphaName;
     }
 
     /**
@@ -34,5 +39,13 @@ class Sms
     public function getTtl()
     {
         return $this->ttl;
+    }
+
+    /**
+     * @return string
+     */
+    public function getAlphaName()
+    {
+        return $this->alphaName;
     }
 }

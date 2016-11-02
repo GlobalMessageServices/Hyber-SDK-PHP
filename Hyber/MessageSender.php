@@ -2,6 +2,7 @@
 
 namespace Hyber;
 
+use Http\Client\Exception\HttpException;
 use Hyber\Response\ErrorResponse;
 use Hyber\Response\SuccessResponse;
 
@@ -18,21 +19,16 @@ class MessageSender
     private $identifier;
 
     /** @var string */
-    private $alphaName;
-
-    /** @var string */
     private $callbackUrl;
 
     /**
      * @param ApiClient $apiClient
-     * @param $identifier
-     * @param $alphaName
+     * @param integer   $identifier
      */
-    public function __construct(ApiClient $apiClient, $identifier, $alphaName)
+    public function __construct(ApiClient $apiClient, $identifier)
     {
         $this->apiClient = $apiClient;
         $this->identifier = $identifier;
-        $this->alphaName = $alphaName;
     }
 
     /** @param string $callbackUrl */
@@ -69,32 +65,37 @@ class MessageSender
     private function doSendMessage(array $data)
     {
         $uri = self::API_HOST . sprintf(self::MESSAGE_CREATE_PATH, $this->identifier);
-        $response = $this->apiClient->apiCall($uri, json_encode($data));
 
-        $response = @json_decode($response->getBody(), true);
-        if (!is_array($response)) {
+        try {
+            $response = $this->apiClient->apiCall($uri, json_encode($data));
+            $response = @json_decode($response->getBody(), true);
+
+            if (isset($response['message_id'])) {
+                return new SuccessResponse($response['message_id']);
+            }
+
             $error = new ErrorResponse();
-            $error->setErrorText($response->getBody());
+            $error->setErrorText("Invalid response detected");
+        } catch (\Exception $e) {
+            if ($e instanceof HttpException) {
+                $response = @json_decode($e->getResponse()->getBody(), true);
+
+                if (isset($response['error_code']) && isset($response['error_text'])) {
+                    $error = new ErrorResponse();
+                    $error->setHttpCode($e->getCode());
+                    $error->setErrorCode($response['error_code']);
+                    $error->setErrorText($response['error_text']);
+
+                    return $error;
+                }
+            }
+
+            $error = new ErrorResponse();
+            $error->setHttpCode($e->getCode());
+            $error->setErrorText($e->getMessage());
 
             return $error;
         }
-
-        if (isset($response['error_code']) && isset($response['error_text'])) {
-            $error = new ErrorResponse();
-            $error->setErrorCode($response['error_code']);
-            $error->setErrorText($response['error_text']);
-
-            return $error;
-        }
-
-        if (isset($response['message_id'])) {
-            return new SuccessResponse($response['message_id']);
-        }
-
-        $error = new ErrorResponse();
-        $error->setErrorText("Invalid response detected");
-
-        return $error;
     }
 
     /**
@@ -115,26 +116,32 @@ class MessageSender
         }
 
         $channels = $message->convertChannelsToArray();
-
+        
         $data = [
-            'texts' => $channels['texts'],
             'channels' => $channels['channels'],
-            'phone_number' => $phone,
-            'extra_id' => $message->getExtraId(),
-            'callback_url' => $this->callbackUrl,
-            'alpha_name' => $this->alphaName
+            'channel_options' => $channels['channel_options'],
         ];
+        
+        $data['phone_number'] = $phone;
 
-        if ($tag = $message->getTag()) {
-            $data['tag'] = $tag;
+        if ($extraId = $message->getExtraId()) {
+            $data['extra_id'] = $extraId;
+        }
+
+        if ($callbackUrl = $this->callbackUrl) {
+            $data['callback_url'] = $callbackUrl;
         }
 
         if ($startTime = $message->convertStartTime($startTime)) {
             $data['start_time'] = $startTime;
         }
 
-        if ($channelOptions = $message->buildChannelOptions()) {
-            $data['channel_options'] = $channelOptions;
+        if ($tag = $message->getTag()) {
+            $data['tag'] = $tag;
+        }
+
+        if ($isPromotional = $message->getIsPromotional()) {
+            $data['is_promotional'] = $isPromotional;
         }
 
         return $data;
