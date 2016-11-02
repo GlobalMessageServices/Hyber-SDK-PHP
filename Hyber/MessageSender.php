@@ -9,7 +9,7 @@ use Hyber\Response\SuccessResponse;
 class MessageSender
 {
     const API_HOST = "https://api.hyber.im";
-    const MESSAGE_CREATE_PATH = "/%s/messages/create";
+    const MESSAGE_CREATE_PATH = "/v2/%s";
     const CODE_PHONE_NUMBER_INCORRECT = 1154;
 
     /** @var ApiClient */
