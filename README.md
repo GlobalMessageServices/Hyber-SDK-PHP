@@ -5,18 +5,10 @@ Easy way to integrate PHP-powered system with Hyber platform
 
 ## Installaton
 
-#### Recommended: composer
+#### Composer
  
-      composer require incuube/sdk-hyber
+      composer require incuube/hyber
 
-#### Not recommended: download sources
-
-      wget https://github.com/Incuube/Hyber-SDK-PHP/archive/master.zip
-      
-Include autoload SDK:
-
-      include_once "sdk-hyber/Hyber/bootstrap.php";
-      
 ## Usage example
 ```PHP
 // First, you need choose Http Client
