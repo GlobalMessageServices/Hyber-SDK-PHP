@@ -8,8 +8,7 @@ use Hyber\Response\SuccessResponse;
 
 class MessageSender
 {
-    const API_HOST = "https://api.hyber.im";
-    const MESSAGE_CREATE_PATH = "/v2/%s";
+    const DEFAULT_API_URL = "https://api-v2.hyber.im/%s";
     const CODE_PHONE_NUMBER_INCORRECT = 1154;
 
     /** @var ApiClient */
@@ -20,6 +19,9 @@ class MessageSender
 
     /** @var string */
     private $callbackUrl;
+
+    /** @var string */
+    private $apiUrl = self::DEFAULT_API_URL;
 
     /**
      * @param ApiClient $apiClient
@@ -35,6 +37,12 @@ class MessageSender
     public function setCallbackUrl($callbackUrl)
     {
         $this->callbackUrl = $callbackUrl;
+    }
+
+    /** @param string $apiUrl */
+    public function overrideApiUrl($apiUrl)
+    {
+        $this->apiUrl = $apiUrl;
     }
 
     /**
@@ -64,10 +72,8 @@ class MessageSender
      */
     private function doSendMessage(array $data)
     {
-        $uri = self::API_HOST . sprintf(self::MESSAGE_CREATE_PATH, $this->identifier);
-
         try {
-            $response = $this->apiClient->apiCall($uri, json_encode($data));
+            $response = $this->apiClient->apiCall(sprintf($this->apiUrl, $this->identifier), json_encode($data));
             $response = @json_decode($response->getBody(), true);
 
             if (isset($response['message_id'])) {
