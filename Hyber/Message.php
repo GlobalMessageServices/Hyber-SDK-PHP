@@ -5,6 +5,7 @@ namespace Hyber;
 use Hyber\Message\Push;
 use Hyber\Message\Sms;
 use Hyber\Message\Viber;
+use Hyber\Message\Vk;
 
 class Message
 {
@@ -28,6 +29,9 @@ class Message
     
     /** @var Viber */
     private $viber;
+
+    /** @var Vk */
+    private $vk;
     
     /** @var Sms */
     private $sms;
@@ -89,6 +93,14 @@ class Message
     }
 
     /**
+     * @return Vk
+     */
+    public function getVk()
+    {
+        return $this->vk;
+    }
+
+    /**
      * @return Sms
      */
     public function getSms()
@@ -110,6 +122,14 @@ class Message
     public function addViber(Viber $viber)
     {
         $this->viber = $viber;
+    }
+
+    /**
+     * @param Vk $vk
+     */
+    public function addVk(Vk $vk)
+    {
+        $this->vk = $vk;
     }
 
     /**
@@ -213,6 +233,26 @@ class Message
             }
 
             $data['channel_options']['viber'] = $options;
+        }
+
+        /** @var Vk $vk */
+        if ($vk = $this->getVk()) {
+            $data['channels'][] = 'vk';
+            $options = [
+                'text' => $vk->getText(),
+                'ttl' => $vk->getTtl(),
+            ];
+
+            if ($img = $vk->getImage()) {
+                $options['img'] = $img;
+            }
+
+            if ($button = $vk->getButton()) {
+                $options['caption'] = $button['caption'];
+                $options['action'] = $button['link'];
+            }
+
+            $data['channel_options']['vk'] = $options;
         }
 
         /** @var Sms $sms */
