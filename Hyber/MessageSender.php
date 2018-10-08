@@ -5,6 +5,7 @@ namespace Hyber;
 use Http\Client\Exception\HttpException;
 use Hyber\Response\ErrorResponse;
 use Hyber\Response\SuccessResponse;
+use AdminBundle\Entity\Enterprise;
 
 class MessageSender
 {
@@ -48,17 +49,17 @@ class MessageSender
     /**
      * @param Message $message
      * @param null $startTime
+     * @param Enterprise|null $enterprise
      * @return array|ErrorResponse|SuccessResponse
-     * @throws \Exception
      */
-    public function send(Message $message, $startTime = null)
+    public function send(Message $message, $startTime = null, Enterprise $enterprise = null)
     {
         if (null != $startTime) {
             /** @var \DateTime $startTime */
             $startTime = $startTime->format('Y-m-d H:i:s');
         }
 
-        $data = $this->convertMessageToArray($message, $startTime);
+        $data = $this->convertMessageToArray($message, $startTime, $enterprise);
         if ($data instanceof ErrorResponse) {
             return $data;
         }
@@ -106,11 +107,11 @@ class MessageSender
 
     /**
      * @param Message $message
-     * @param \DateTime $startTime
-     * @return array
-     * @throws ErrorResponse
+     * @param null $startTime
+     * @param Enterprise|null $enterprise
+     * @return array|ErrorResponse
      */
-    private function convertMessageToArray(Message $message, $startTime = null)
+    private function convertMessageToArray(Message $message, $startTime = null, Enterprise $enterprise = null)
     {
         $phone = $message->validatePhoneNumber();
         if (null === $phone) {
@@ -121,7 +122,7 @@ class MessageSender
             return $error;
         }
 
-        $channels = $message->convertChannelsToArray();
+        $channels = $message->convertChannelsToArray($enterprise);
         
         $data = [
             'channels' => $channels['channels'],
