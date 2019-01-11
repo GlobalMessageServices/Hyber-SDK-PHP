@@ -6,6 +6,8 @@ use Hyber\Message\Push;
 use Hyber\Message\Sms;
 use Hyber\Message\Viber;
 use Hyber\Message\Vk;
+use AdminBundle\Entity\Enterprise;
+use AdminBundle\Entity\DefaultPartnersOptions;
 
 class Message
 {
@@ -178,92 +180,109 @@ class Message
     }
 
     /**
+     * @param Enterprise|null $enterprise
      * @return array
      */
-    public function convertChannelsToArray()
+    public function convertChannelsToArray(Enterprise $enterprise = null)
     {
         $data = [
             'channels' => [],
             'channel_options' => [],
         ];
 
-        /** @var Push $push */
-        if ($push = $this->getPush()) {
-            $data['channels'][] = 'push';
-            $options = [
-                'text' => $push->getText(),
-                'ttl' => $push->getTtl(),
-            ];
+        $sortables = $enterprise->getDefaultPartnersOptions()->getActiveSortableOptions();
+        if(isset($sortables) && count($sortables) > 0)
+        {
+            foreach ($sortables as $sortable)
+            {
+                if($sortable == DefaultPartnersOptions::OPTIONS_PUSH)
+                {
+                    /** @var Push $push */
+                    if ($push = $this->getPush()) {
+                        $data['channels'][] = 'push';
+                        $options = [
+                            'text' => $push->getText(),
+                            'ttl' => $push->getTtl(),
+                        ];
 
-            if ($title = $push->getTitle()) {
-                $options['title'] = $title;
+                        if ($title = $push->getTitle()) {
+                            $options['title'] = $title;
+                        }
+
+                        if ($img = $push->getImage()) {
+                            $options['img'] = $img;
+                        }
+
+                        if ($button = $push->getButton()) {
+                            $options['caption'] = $button['caption'];
+                            $options['action'] = $button['link'];
+                        }
+
+                        $data['channel_options']['push'] = $options;
+                    }
+                }
+                elseif($sortable == DefaultPartnersOptions::OPTIONS_VIBER)
+                {
+                    /** @var Viber $viber */
+                    if ($viber = $this->getViber()) {
+                        $data['channels'][] = 'viber';
+                        $options = [
+                            'text' => $viber->getText(),
+                            'ttl' => $viber->getTtl(),
+                        ];
+
+                        if ($img = $viber->getImage()) {
+                            $options['img'] = $img;
+                        }
+
+                        if ($button = $viber->getButton()) {
+                            $options['caption'] = $button['caption'];
+                            $options['action'] = $button['link'];
+                        }
+
+                        if ($iosExpirityText = $viber->getIosExpirityText()) {
+                            $options['ios_expirity_text'] = $iosExpirityText;
+                        }
+
+                        $data['channel_options']['viber'] = $options;
+                    }
+                }
+                elseif($sortable == DefaultPartnersOptions::OPTIONS_VK)
+                {
+                    /** @var Vk $vk */
+                    if ($vk = $this->getVk()) {
+                        $data['channels'][] = 'vk';
+                        $options = [
+                            'text' => $vk->getText(),
+                            'ttl' => $vk->getTtl(),
+                        ];
+
+                        if ($img = $vk->getImage()) {
+                            $options['img'] = $img;
+                        }
+
+                        if ($button = $vk->getButton()) {
+                            $options['caption'] = $button['caption'];
+                            $options['action'] = $button['link'];
+                        }
+
+                        $data['channel_options']['vk'] = $options;
+                    }
+                }
+                elseif($sortable == DefaultPartnersOptions::OPTIONS_SMS)
+                {
+                    /** @var Sms $sms */
+                    $sms = $this->getSms();
+                    if ($sms) {
+                        $data['channels'][] = 'sms';
+                        $data['channel_options']['sms'] = [
+                            'text' => $sms->getText(),
+                            'alpha_name' => $sms->getAlphaName(),
+                            'ttl' => $sms->getTtl(),
+                        ];
+                    }
+                }
             }
-
-            if ($img = $push->getImage()) {
-                $options['img'] = $img;
-            }
-
-            if ($button = $push->getButton()) {
-                $options['caption'] = $button['caption'];
-                $options['action'] = $button['link'];
-            }
-
-            $data['channel_options']['push'] = $options;
-        }
-
-        /** @var Viber $viber */
-        if ($viber = $this->getViber()) {
-            $data['channels'][] = 'viber';
-            $options = [
-                'text' => $viber->getText(),
-                'ttl' => $viber->getTtl(),
-            ];
-
-            if ($img = $viber->getImage()) {
-                $options['img'] = $img;
-            }
-
-            if ($button = $viber->getButton()) {
-                $options['caption'] = $button['caption'];
-                $options['action'] = $button['link'];
-            }
-
-            if ($iosExpirityText = $viber->getIosExpirityText()) {
-                $options['ios_expirity_text'] = $iosExpirityText;
-            }
-
-            $data['channel_options']['viber'] = $options;
-        }
-
-        /** @var Vk $vk */
-        if ($vk = $this->getVk()) {
-            $data['channels'][] = 'vk';
-            $options = [
-                'text' => $vk->getText(),
-                'ttl' => $vk->getTtl(),
-            ];
-
-            if ($img = $vk->getImage()) {
-                $options['img'] = $img;
-            }
-
-            if ($button = $vk->getButton()) {
-                $options['caption'] = $button['caption'];
-                $options['action'] = $button['link'];
-            }
-
-            $data['channel_options']['vk'] = $options;
-        }
-
-        /** @var Sms $sms */
-        $sms = $this->getSms();
-        if ($sms) {
-            $data['channels'][] = 'sms';
-            $data['channel_options']['sms'] = [
-                'text' => $sms->getText(),
-                'alpha_name' => $sms->getAlphaName(),
-                'ttl' => $sms->getTtl(),
-            ];
         }
 
         return $data;
